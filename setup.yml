@@ -1,15 +1,14 @@
 - hosts: tag_Name_Master
-  become_method: sudo
-  become_user: root
-  become: true
   gather_facts: False
   roles:
      - role: k8s_master
 
 - hosts: tag_Name_Slave
-  become_method: sudo
-  become_user: root
-  become: true
   gather_facts: False
   roles:
      - role: k8s_slave
+   
+- hosts: tag_Name_Master
+  gather_facts: False
+  roles:
+     - role: wordpress-mysql
