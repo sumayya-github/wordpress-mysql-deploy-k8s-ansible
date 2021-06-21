@@ -20,7 +20,7 @@
   shell: yum install kubeadm kubelet kubectl iproute-tc -y
 
 - name: "Starting and Enabling Kubernetes Services"
-   shell: systemctl enable kubelet --now
+  shell: systemctl enable kubelet --now
 
 - name: "Pulling the Config Images using kubeadm"
   shell: kubeadm config images pull
