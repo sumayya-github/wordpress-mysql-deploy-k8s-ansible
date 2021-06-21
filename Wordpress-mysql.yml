@@ -1,0 +1,29 @@
+#tasks file for wordpress-mysql
+- name: "Deploying MYSQL Database"
+  shell: kubectl run db --image=mysql:5.7 --env=MYSQL_ROOT_PASSWORD=redhat --env=MYSQL_DATABASE=wpdb  --env=MYSQL_USER=sumayya  --env=MYSQL_PASSWORD=redhat
+  register: mysql
+- debug:
+    var: "mysql.stdout_lines"
+
+- name: "Exposing WordPress Application"
+  shell: kubectl expose pod wp --type=NodePort --port=80
+  register: expose
+- debug:
+     var: "expose.stdout_lines"
+
+- name: "Getting the Services"
+  shell: kubectl get svc
+  register: svc
+- debug:
+    var: "svc.stdout_lines"
+
+
+- name: "Pausing the Playbook for 60 seconds"
+  pause:
+     seconds: 60
+
+- name: "Fetching Database IP"
+  shell: kubectl get pods -o wide
+  register: db_ip                               
+- debug:
+    var: db_ip.stdout_lines
