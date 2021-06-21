@@ -1,0 +1,61 @@
+---
+# tasks file for k8s_slave
+- name: "Installing Docker"
+  command: yum install docker -y
+
+- name: "Starting and Enabling Docker Services"
+  shell: systemctl enable docker --now
+
+- name: "Configuring K8s Repo"
+  yum_repository:
+       name: Kubernetes
+       description: Repo for Configuring Kubernetes
+       baseurl: https://packages.cloud.google.com/yum/repos/kubernetes-el7-\$basearch
+       enabled: yes
+       gpgcheck: yes
+       repo_gpgcheck: yes
+       gpgkey: https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+
+- name: "Installing kubelet kubectl kubeadm iproute-tc Package"
+  shell: yum install kubectl kubelet kubeadm iproute-tc -y
+
+- name: "Starting and Enabling Kubernetes Services"
+  service:
+      name: kubelet
+      state: started
+      enabled: yes
+
+- name: "Pulling the Config Images using kubeadm"
+  shell: kubeadm config images pull
+
+- name: "Configuring the Docker daemon.json file"
+  copy:
+    dest: /etc/docker/daemon.json
+    content: |
+       {
+          "exec-opts": ["native.cgroupdriver=systemd"]
+       }
+
+- name: "Restarting Docker Service"
+  service:
+    name: docker
+    state: restarted
+
+- name: "Configuring the IP Tables"
+  copy:
+    dest: /etc/sysctl.d/k8s.conf
+    content: |
+        net.bridge.bridge-nf-call-ip6tables = 1
+        net.bridge.bridge-nf-call-iptables = 1
+
+- name: "Running sysctl command"
+  shell: sysctl --system
+
+- name: "Getting the Token"
+  debug:
+     msg: "{{ hostvars['token']['token_k8s'] }}"
+   register: token_final
+
+- name: "Joining the Master with Token"
+  command: "{{ token_final.msg }}"
+
